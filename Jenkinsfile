@@ -23,7 +23,7 @@ pipeline {
                     def imageTag = 'latest'
                     def dockerImage = "${imageName}:${imageTag}"
                    
-                    sh "docker build -t ${dockerImage} ."
+                    sh docker build -t ${dockerImage} .
                 }
             }
         }
