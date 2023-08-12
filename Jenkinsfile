@@ -1,61 +1,63 @@
 pipeline {
     agent any
-    
+   
     environment {
-        DOCKER_IMAGE = 'jerrywise97/periodapp'
-        BUILD_NUMBER = "latest"
-        DOCKER_REGISTRY_CREDENTIALS = credentials('docker')
-        EC2_USER = 'ec2-user'
-        SSH_KEY = credentials('196f3506-9419-495c-83d5-f60c1d8c4771')
-        EC2_HOST = '54.90.24.221'
+        DOCKERHUB_USERNAME = credentials('dockerID')
+        DOCKERHUB_PASSWORD = credentials('dockerID')
+        EC2_PRIVATE_KEY = credentials('EC2_PRIVATE_KEY')
+        EC2_PUBLIC_IP = 'ec2-3-253-141-89.eu-west-1.compute.amazonaws.com'
+        EC2_USERNAME = 'ec2-user'
     }
-    
+   
     stages {
-        stage('Clone') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/jerrywise97/period-app-api.git'
-
+                checkout scm
             }
-        }     
-    stage('Docker Build') {
-      steps {
-        // Build Docker image
-        sh 'ls -la'
-        sh 'docker build -t jerrywise97/periodapp:${BUILD_NUMBER} .'
-      }
-    }
-
-
-    stage('Push to dockerhub') {
-      steps {
-        withCredentials([
-            usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')
-        ]) {
-            sh 'docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}'
-            // Build app using docker
-            sh 'docker push jerrywise97/periodapp:${BUILD_NUMBER}'
-            // Logout from Docker Hub
-            sh 'docker logout'
         }
-      }
-    }
-
-
-        stage('Deploy to EC2') {
+        
+        stage('Build Docker Image') {
             steps {
-                script{
-                    sshagent(credentials: ['196f3506-9419-495c-83d5-f60c1d8c4771']) {
-                        def remoteCommand = "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST}"
-                        remoteCommand += " docker pull ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
-                        remoteCommand += " docker stop your-app-container || true"
-                        remoteCommand += " docker rm your-app-container || true"
-                        remoteCommand += " docker run -d --name your-app-container -p 8891:8891 ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
-                        
-                        sh remoteCommand
-                    }    
+                script {
+                    def imageName = 'periodapp'
+                    def imageTag = 'latest'
+                    def dockerImage = "${imageName}:${imageTag}"
+                   
+                    sh "docker build -t ${dockerImage} ."
                 }
             }
+        }
+       
+        stage('Push Docker Image to DockerHub') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'dockerID', url: '') {
+                        def dockerImage = "${DOCKERHUB_USERNAME}/${imageName}:${imageTag}"
+                       
+                        sh "docker tag ${imageName}:${imageTag} ${dockerImage}"
+                        sh "docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}"
+                        sh "docker push ${dockerImage}"
+                    }
+                }
+            }
+        }
+       
+        stage('SSH to EC2 and Run Docker Container') {
+            steps {
+                script {
+                    def privateKey = EC2_PRIVATE_KEY
+                    def sshCommand = "ssh -i %privateKey% -o StrictHostKeyChecking=no ${EC2_USERNAME}@${EC2_PUBLIC_IP}"
+                   
+                    sh "${sshCommand} 'docker pull ${dockerImage}'"
+                    sh "${sshCommand} 'docker run -d -p 80:80 ${dockerImage}'"
+                }
+            }
+        }
+    }
+   
+    post {
+        always {
+            cleanWs()
         }
     }
 }
