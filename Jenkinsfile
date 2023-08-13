@@ -23,7 +23,7 @@ pipeline {
                     def imageTag = 'latest'
                     def dockerImage = "${imageName}:${imageTag}"
                    
-                    sh '/usr/local/bin/docker build -t periodapp:latest .'
+                    docker build -t periodapp:latest .'
                 }
             }
         }
