@@ -7,9 +7,6 @@ WORKDIR /app
 #copying all the source file into the container  
 COPY . . 
 
-#using maven to build the project and skip test
-RUN mvn package -DskipTest
-
 
 #specify the what you want to use to run a container 
 FROM eclipse-temurin:17
