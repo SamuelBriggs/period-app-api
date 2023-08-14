@@ -5,7 +5,7 @@ FROM maven:3.8.7 as build
 WORKDIR /app
 
 #copying all the source file into the container  
-COPY . . 
+COPY period-app .
 
 
 #specify the what you want to use to run a container 
