@@ -12,7 +12,7 @@ COPY . .
 FROM eclipse-temurin:17
 
 #youre copying the build image into the java container and it been copied into the app.jar
-COPY --from=build /app/target/*.jar /app.jar
+COPY target/period-app-0.0.1-SNAPSHOT.jar /app/period-app-0.0.1-SNAPSHOT.jar
 
 
 # Expose the port that your Spring Boot application listens on
