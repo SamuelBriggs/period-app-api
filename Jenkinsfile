@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_USERNAME = credentials('dockerID')
         DOCKERHUB_PASSWORD = credentials('dockerID')
-        EC2_PRIVATE_KEY = credentials('EC2_PRIVATE_KEY')
+        EC2_PRIVATE_KEY = credentials('ec2-ssh-key')
         EC2_PUBLIC_IP = 'ec2-3-253-141-89.eu-west-1.compute.amazonaws.com'
         EC2_USERNAME = 'ec2-user'
     }
