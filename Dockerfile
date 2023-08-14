@@ -9,7 +9,7 @@ COPY . .
 
 
 #specify the what you want to use to run a container 
-#FROM eclipse-temurin:17
+FROM eclipse-temurin:17
 
 #youre copying the build image into the java container and it been copied into the app.jar
 COPY --from=build app/target/*.jar /app.jar
