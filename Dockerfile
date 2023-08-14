@@ -5,7 +5,7 @@ FROM maven:3.8.7 as build
 WORKDIR /app
 
 # Copying source files into the container
-COPY period-app .
+COPY . .
 
 # Building the application
 RUN mvn clean package
